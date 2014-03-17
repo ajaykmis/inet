@@ -247,8 +247,7 @@ void TCPRandomTester::handleMessage(cMessage *msg)
         bool fromA = msg->arrivedOn("in1");
         processIncomingSegment(seg, fromA);
     }
-    else if (msg->getKind() == IP_C_REGISTER_PROTOCOL) {
-        IPRegisterProtocolCommand * command = check_and_cast<IPRegisterProtocolCommand *>(msg->getControlInfo());
+    else if (dynamic_cast<IPRegisterProtocolCommand *>(msg)) {
         delete msg;
     }
     else
