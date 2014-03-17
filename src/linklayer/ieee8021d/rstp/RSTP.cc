@@ -940,10 +940,11 @@ void RSTP::receiveSignal(cComponent *source, simsignal_t signalID, cObject *obj)
 {
     if (signalID == NF_INTERFACE_STATE_CHANGED)
     {
+        InterfaceEntry *changedIE = check_and_cast<const InterfaceEntryChangeDetails *>(obj)->getInterfaceEntry();
         for (unsigned int i = 0; i < numPorts; i++)
         {
             InterfaceEntry * gateIfEntry = getPortInterfaceEntry(i);
-            if (gateIfEntry == check_and_cast<const InterfaceEntry *>(obj))
+            if (gateIfEntry == changedIE)
             {
                 if(gateIfEntry->hasCarrier())
                 {
