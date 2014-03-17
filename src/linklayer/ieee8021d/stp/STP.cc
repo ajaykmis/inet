@@ -41,7 +41,7 @@ void STP::initialize(int stage)
         tick = new cMessage("STP_TICK", 0);
         WATCH(bridgeAddress);
     }
-    else if (stage == INITSTAGE_LINK_LAYER)
+    else if (stage == INITSTAGE_LINK_LAYER_2)
     {
         initPortTable();
 
