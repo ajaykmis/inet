@@ -46,13 +46,10 @@ void L2NodeConfigurator::initialize(int stage)
             networkConfigurator = check_and_cast<L2NetworkConfigurator *>(module);
         }
     }
-    else if (stage == INITSTAGE_LINK_LAYER)
+    else if (stage == INITSTAGE_LINK_LAYER_2)
     {
         if (!nodeStatus || nodeStatus->getState() == NodeStatus::UP)
             prepareNode();
-    }
-    else if (stage == INITSTAGE_LINK_LAYER_2)
-    {
         if ((!nodeStatus || nodeStatus->getState() == NodeStatus::UP) && networkConfigurator)
             configureNode();
     }
