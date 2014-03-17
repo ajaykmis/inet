@@ -21,7 +21,7 @@
 
 #include <vector>
 #include <omnetpp.h>
-#include "IPvXAddress.h"
+#include "Address.h"
 #include "SCTPAssociation.h"
 
 
@@ -29,9 +29,9 @@ class INET_API SCTPNatEntry : public cPolymorphic
 {
   protected:
     uint32 entryNumber;
-    IPvXAddress localAddress;
-    IPvXAddress globalAddress;
-    IPvXAddress nattedAddress;
+    Address localAddress;
+    Address globalAddress;
+    Address nattedAddress;
     uint16 localPort;
     uint16 globalPort;
     uint16 nattedPort;
@@ -43,9 +43,9 @@ class INET_API SCTPNatEntry : public cPolymorphic
     ~SCTPNatEntry();
 
     cMessage* NatTimer;
-    void setLocalAddress(IPvXAddress addr) {localAddress = addr;};
-    void setGlobalAddress(IPvXAddress addr) {globalAddress = addr;};
-    void setNattedAddress(IPvXAddress addr) {nattedAddress = addr;};
+    void setLocalAddress(Address addr) {localAddress = addr;};
+    void setGlobalAddress(Address addr) {globalAddress = addr;};
+    void setNattedAddress(Address addr) {nattedAddress = addr;};
     void setLocalPort(uint16 port) {localPort = port;};
     void setGlobalPort(uint16 port) {globalPort = port;};
     void setNattedPort(uint16 port) {nattedPort = port;};
@@ -53,9 +53,9 @@ class INET_API SCTPNatEntry : public cPolymorphic
     void setLocalVTag(uint32 tag) {localVtag = tag;};
     void setEntryNumber(uint32 number) {entryNumber = number;};
 
-    IPvXAddress getLocalAddress() {return localAddress;};
-    IPvXAddress getGlobalAddress() {return globalAddress;};
-    IPvXAddress getNattedAddress() {return nattedAddress;};
+    Address getLocalAddress() {return localAddress;};
+    Address getGlobalAddress() {return globalAddress;};
+    Address getNattedAddress() {return nattedAddress;};
     uint16 getLocalPort() {return localPort;};
     uint16 getGlobalPort() {return globalPort;};
     uint16 getNattedPort() {return nattedPort;};
@@ -80,15 +80,15 @@ class INET_API SCTPNatTable : public cSimpleModule
 
     //void addNatEntry(SCTPNatEntry* entry);
 
-    SCTPNatEntry* findNatEntry(IPvXAddress srcAddr, uint16 srcPrt, IPvXAddress destAddr, uint16 destPrt, uint32 globalVtag);
+    SCTPNatEntry* findNatEntry(Address srcAddr, uint16 srcPrt, Address destAddr, uint16 destPrt, uint32 globalVtag);
 
-    SCTPNatEntry* getEntry(IPvXAddress globalAddr, uint16 globalPrt, IPvXAddress nattedAddr, uint16 nattedPrt, uint32 localVtag);
+    SCTPNatEntry* getEntry(Address globalAddr, uint16 globalPrt, Address nattedAddr, uint16 nattedPrt, uint32 localVtag);
 
-    SCTPNatEntry* getSpecialEntry(IPvXAddress globalAddr, uint16 globalPrt, IPvXAddress nattedAddr, uint16 nattedPrt);
+    SCTPNatEntry* getSpecialEntry(Address globalAddr, uint16 globalPrt, Address nattedAddr, uint16 nattedPrt);
 
-    SCTPNatEntry* getLocalInitEntry(IPvXAddress globalAddr, uint16 localPrt, uint16 globalPrt);
+    SCTPNatEntry* getLocalInitEntry(Address globalAddr, uint16 localPrt, uint16 globalPrt);
 
-    SCTPNatEntry* getLocalEntry(IPvXAddress globalAddr, uint16 localPrt, uint16 globalPrt, uint32 localVtag);
+    SCTPNatEntry* getLocalEntry(Address globalAddr, uint16 localPrt, uint16 globalPrt, uint32 localVtag);
 
     void removeEntry(SCTPNatEntry* entry);
 

@@ -63,10 +63,10 @@ SCTPPathVariables::SCTPPathVariables(const Address& addr, SCTPAssociation* assoc
     outstandingBytes = 0;
 
     IPv4RoutingTableAccess routingTableAccess;
-    const InterfaceEntry* rtie = routingTableAccess.get()->getInterfaceForDestAddr(remoteAddress.toIPv4());
+    const InterfaceEntry* rtie = routingTableAccess.get()->getOutputInterfaceForDestination(remoteAddress);
 
     if (rtie == NULL) {
-        throw cRuntimeError("No interface for remote address %s found!", remoteAddress.toIPv4().str().c_str());
+        throw cRuntimeError("No interface for remote address %s found!", remoteAddress.str().c_str());
     }
 
     pmtu = rtie->getMTU();

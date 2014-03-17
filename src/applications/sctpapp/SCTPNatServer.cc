@@ -25,7 +25,7 @@
 #include "SCTPCommand_m.h"
 #include "SCTPMessage_m.h"
 #include "SCTPSocket.h"
-#include "IPvXAddressResolver.h"
+#include "AddressResolver.h"
 #include "SCTPNatTable.h"
 
 
@@ -44,7 +44,7 @@ void SCTPNatServer::initialize()
 
     // parameters
     const char *addressesString = par("localAddress");
-    AddressVector addresses = IPvXAddressResolver().resolve(cStringTokenizer(addressesString).asVector());
+    AddressVector addresses = AddressResolver().resolve(cStringTokenizer(addressesString).asVector());
     int32 port = par("localPort");
     inboundStreams = par("inboundStreams");
     outboundStreams = par("outboundStreams");
@@ -252,7 +252,7 @@ void SCTPNatServer::handleMessage(cMessage *msg)
                             if (nat->getMulti() && nat->getPeer1AddressesArraySize() > 1 && nat->getPeer2AddressesArraySize() > 1) {
                                 sctpEV3 << " peer1Address2=" << nat->getPeer1Addresses(1)  << " peer2Address2=" << nat->getPeer2Addresses(1) << endl;
                             }
-                            if ((*it)->peer1 == 0 && (*it)->peer1Address2 != IPvXAddress("0.0.0.0")) {
+                            if ((*it)->peer1 == 0 && !(*it)->peer1Address2.isUnspecified()) {
                                 (*it)->peer1 = nat->getPeer1();
                                 (*it)->peer1Address1 = ind->getRemoteAddr();
                                 (*it)->peer1Port = nat->getPortPeer1();
@@ -260,14 +260,14 @@ void SCTPNatServer::handleMessage(cMessage *msg)
                                     (*it)->peer2 = nat->getPeer2();
                                 }
                             }
-                            if (nat->getMulti() && (*it)->peer1Address2==IPvXAddress("0.0.0.0"))
+                            if (nat->getMulti() && (*it)->peer1Address2.isUnspecified())
                             {
                                 (*it)->peer1Address2 = ind->getRemoteAddr();
                             }
-                            if ((*it)->peer2Address1!=IPvXAddress("0.0.0.0") && (*it)->peer1Address1!=IPvXAddress("0.0.0.0"))
+                            if (!(*it)->peer2Address1.isUnspecified() && !(*it)->peer1Address1.isUnspecified())
                             {
 
-                                if (!(*it)->multi || ((*it)->multi && (*it)->peer2Address2!=IPvXAddress("0.0.0.0") && (*it)->peer1Address2!=IPvXAddress("0.0.0.0")))
+                                if (!(*it)->multi || ((*it)->multi && !(*it)->peer2Address2.isUnspecified() && !(*it)->peer1Address2.isUnspecified()))
                                 {
                                     sctpEV3 << "entry now: Peer1=" << (*it)->peer1 << " Peer2=" << (*it)->peer2 << " peer1Address1=" << (*it)->peer1Address1 << " peer1Address2=" << (*it)->peer1Address2 << " peer2Address1=" << (*it)->peer2Address1 << " peer2Address2=" << (*it)->peer2Address2 << " peer2Port=" << (*it)->peer2Port << "\n";
                                     sendInfo((*it));
@@ -288,7 +288,7 @@ void SCTPNatServer::handleMessage(cMessage *msg)
                             if ((*it)->peer1 == 0) {
                                 (*it)->peer1 = nat->getPeer2();
                             }
-                            if ((*it)->peer2Address1==IPvXAddress("0.0.0.0"))
+                            if ((*it)->peer2Address1.isUnspecified())
                             {
                                 (*it)->peer2Address1 = ind->getRemoteAddr();
                                 (*it)->peer2Assoc = assocId;
@@ -296,11 +296,11 @@ void SCTPNatServer::handleMessage(cMessage *msg)
                                 (*it)->peer2Gate = ind->getGate();
                                 sctpEV3 << "set peer2Address1=" << ind->getRemoteAddr() << " peer2Assoc=" << assocId << " peer2Port=" << nat->getPortPeer1() << "\n";
                             }
-                            else if ((*it)->multi && (*it)->peer2Address2 != IPvXAddress("0.0.0.0"))
+                            else if ((*it)->multi && !(*it)->peer2Address2.isUnspecified())
                                 (*it)->peer2Address2 = ind->getRemoteAddr();
 
-                            if (!(*it)->multi || ((*it)->multi && (*it)->peer2Address2!=IPvXAddress("0.0.0.0") && (*it)->peer1Address2!=IPvXAddress("0.0.0.0")
-                                && (*it)->peer2Address1!=IPvXAddress("0.0.0.0") && (*it)->peer1Address1!=IPvXAddress("0.0.0.0")))
+                            if (!(*it)->multi || ((*it)->multi && !(*it)->peer2Address2.isUnspecified() && !(*it)->peer1Address2.isUnspecified()
+                                && !(*it)->peer2Address1.isUnspecified() && !(*it)->peer1Address1.isUnspecified()))
                             {
                                 sctpEV3 << "entry now: Peer1=" << (*it)->peer1 << " Peer2=" << (*it)->peer2 << " peer1Address1=" << (*it)->peer1Address1 << " peer1Address2=" << (*it)->peer1Address2 << " peer2Address1=" << (*it)->peer2Address1 << " peer2Address2=" << (*it)->peer2Address2 << " peer1Port=" << (*it)->peer1Port << "peer2Port=" << (*it)->peer2Port << "\n";
                                 sendInfo((*it));
@@ -320,14 +320,14 @@ void SCTPNatServer::handleMessage(cMessage *msg)
                     info->peer1Address1 = ind->getRemoteAddr();
                     if (info->multi)
                     {
-                        info->peer1Address2 = IPvXAddress("0.0.0.0");
-                        info->peer2Address2 = IPvXAddress("0.0.0.0");
+                        info->peer1Address2 = Address();
+                        info->peer2Address2 = Address();
                     }
                     info->peer1Port = nat->getPortPeer1();
                     info->peer1Assoc = assocId;
                     info->peer1Gate = ind->getGate();
                     info->peer2 = nat->getPeer2();
-                    info->peer2Address1 = IPvXAddress("0.0.0.0");
+                    info->peer2Address1 = Address();
                     info->peer2Port = 0;
                     info->peer2Assoc = 0;
                     info->peer2Gate = -1;
@@ -383,15 +383,15 @@ void SCTPNatServer::handleMessage(cMessage *msg)
                         if ((*it)->peer1Assoc==assocId)
                         {
                             sctpEV3 << "found entry for assoc1 = " << assocId << "  Peer1 = " << (*it)->peer1 << "  peer1Address1=" << (*it)->peer1Address1 << " peer1Address2=" << (*it)->peer1Address2 << " peer2=" << (*it)->peer2 << " peer2Address1=" << (*it)->peer2Address1 << " peer2Address2=" << (*it)->peer2Address2 << "\n";
-                            if ((*it)->multi && (*it)->peer1Address2==IPvXAddress("0.0.0.0"))
+                            if ((*it)->multi && (*it)->peer1Address2.isUnspecified())
                             {
                                 (*it)->peer1Address2 = ind->getRemoteAddr();
                                 sctpEV3 << "added peer1Address2=" << ind->getRemoteAddr() << "\n";
                             }
-                            if ((*it)->peer2Address1!=IPvXAddress("0.0.0.0"))
+                            if (!(*it)->peer2Address1.isUnspecified())
                             {
 
-                                if (!(*it)->multi || ((*it)->multi && (*it)->peer2Address2!=IPvXAddress("0.0.0.0") && (*it)->peer1Address2!=IPvXAddress("0.0.0.0")))
+                                if (!(*it)->multi || ((*it)->multi && !(*it)->peer2Address2.isUnspecified() && !(*it)->peer1Address2.isUnspecified()))
                                 {
                                     sctpEV3 << "entry now: Peer1=" << (*it)->peer1 << " Peer2=" << (*it)->peer2 << " peer1Address1=" << (*it)->peer1Address1 << " peer1Address2=" << (*it)->peer1Address2 << " peer2Address1=" << (*it)->peer2Address1 << " peer2Address2=" << (*it)->peer2Address2 << " peer2Port=" << (*it)->peer2Port << "\n";
                                     sendInfo((*it));
@@ -406,7 +406,7 @@ void SCTPNatServer::handleMessage(cMessage *msg)
                             if ((*it)->multi)
                                 (*it)->peer2Address2 = ind->getRemoteAddr();
 
-                            if (!(*it)->multi || ((*it)->multi && (*it)->peer2Address2!=IPvXAddress("0.0.0.0") && (*it)->peer1Address2!=IPvXAddress("0.0.0.0")))
+                            if (!(*it)->multi || ((*it)->multi && !(*it)->peer2Address2.isUnspecified() && !(*it)->peer1Address2.isUnspecified()))
                             {
                                 sctpEV3 << "entry now: Peer1=" << (*it)->peer1 << " Peer2=" << (*it)->peer2 << " peer1Address1=" << (*it)->peer1Address1 << " peer1Address2=" << (*it)->peer1Address2 << " peer2Address1=" << (*it)->peer2Address1 << " peer2Address2=" << (*it)->peer2Address2 << " peer1Port=" << (*it)->peer1Port << "peer2Port=" << (*it)->peer2Port << "\n";
                                 sendInfo((*it));
@@ -432,13 +432,13 @@ void SCTPNatServer::handleMessage(cMessage *msg)
                     info->peer1Assoc = assocId;
                     sctpEV3 << info->peer1 << " and assoc " << assocId << "\n";;
                     info->multi = 1;
-                    info->peer1Address1 = IPvXAddress("0.0.0.0");
+                    info->peer1Address1 = Address();
                     info->peer1Address2 = ind->getRemoteAddr();
                     info->peer1Port = ind->getRemotePort();
                     info->peer1Gate = ind->getGate();
                     info->peer2 = 0;
-                    info->peer2Address1 = IPvXAddress("0.0.0.0");
-                    info->peer2Address2 = IPvXAddress("0.0.0.0");
+                    info->peer2Address1 = Address();
+                    info->peer2Address2 = Address();
                     info->peer2Port = 0;
                     info->peer2Assoc = 0;
                     info->peer2Gate = -1;

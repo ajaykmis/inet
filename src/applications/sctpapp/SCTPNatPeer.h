@@ -57,7 +57,7 @@ class INET_API SCTPNatPeer : public cSimpleModule, public SCTPSocket::CallbackIn
     int32 chunksAbandoned;
     int32 numPacketsToReceive;
     bool rendezvous;
-    IPvXAddress peerAddress;
+    Address peerAddress;
     int32 peerPort;
     AddressVector peerAddressList;
     AddressVector localAddressList;
@@ -83,9 +83,9 @@ class INET_API SCTPNatPeer : public cSimpleModule, public SCTPSocket::CallbackIn
     struct pathStatus {
         bool active;
         bool primaryPath;
-        IPvXAddress  pid;
+        Address  pid;
     };
-    typedef std::map<IPvXAddress,pathStatus> SCTPPathStatus;
+    typedef std::map<Address,pathStatus> SCTPPathStatus;
     SCTPPathStatus sctpPathStatus;
     //virtual void socketStatusArrived(int32 assocId, void *yourPtr, SCTPStatusInfo *status);
     void initialize();
@@ -95,7 +95,7 @@ class INET_API SCTPNatPeer : public cSimpleModule, public SCTPSocket::CallbackIn
     /*void setAssociation(SCTPAssociation *_assoc) {
     assoc = _assoc;};*/
     void generateAndSend();
-    void connect(IPvXAddress connectAddress, int32 connectPort);
+    void connect(Address connectAddress, int32 connectPort);
     void connectx(AddressVector connectAddressList, int32 connectPort);
 
     /** Does nothing but update statistics/status. Redefine to perform or schedule first sending. */
@@ -129,7 +129,7 @@ class INET_API SCTPNatPeer : public cSimpleModule, public SCTPSocket::CallbackIn
     void sendQueueRequest();
     void shutdownReceivedArrived(int32 connId);
     void sendqueueFullArrived(int32 connId);
-    void addressAddedArrived(int32 assocId, IPvXAddress localAddr, IPvXAddress remoteAddr);
+    void addressAddedArrived(int32 assocId, Address localAddr, Address remoteAddr);
     void setStatusString(const char *s);
 };
 

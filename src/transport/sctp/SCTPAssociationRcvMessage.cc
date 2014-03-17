@@ -2561,7 +2561,7 @@ SCTPEventCode SCTPAssociation::processAsconfArrived(SCTPAsconfChunk* asconfChunk
                     SCTPAddIPParameter* ipParam;
                     ipParam = check_and_cast<SCTPAddIPParameter*>(sctpParam);
                     addr = ipParam->getAddressParam();
-                    if (addr==Address("0.0.0.0"))
+                    if (addr.isUnspecified())
                     {
                         sctpEV3 << "no address specified, add natted address " << remoteAddr << "\n";
                         addr = remoteAddr;
@@ -2631,7 +2631,7 @@ SCTPEventCode SCTPAssociation::processAsconfArrived(SCTPAsconfChunk* asconfChunk
                     SCTPSetPrimaryIPParameter* priParam;
                     priParam = check_and_cast<SCTPSetPrimaryIPParameter*>(sctpParam);
                     addr = priParam->getAddressParam();
-                    if (addr==Address("0.0.0.0"))
+                    if (addr.isUnspecified())
                     {
                         sctpEV3 << "no address specified, add natted address " << remoteAddr << "\n";
                         addr = remoteAddr;
@@ -2721,7 +2721,7 @@ SCTPEventCode SCTPAssociation::processAsconfAckArrived(SCTPAsconfAckChunk* ascon
                         break;
                     }
                     addr = ipParam->getAddressParam();
-                    if (addr==Address("0.0.0.0"))
+                    if (addr.isUnspecified())
                     {
                         addr = localAddr;
                         sendIndicationToApp(SCTP_I_ADDRESS_ADDED);

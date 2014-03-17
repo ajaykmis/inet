@@ -1,7 +1,6 @@
 #include "IPv4ControlInfo.h"
 #include "IPv4.h"
 #include "SCTPNatHook.h"
-#include "RoutingTableAccess.h"
 #include "IPv4InterfaceData.h"
 #include "SCTPAssociation.h"
 
@@ -21,19 +20,16 @@ SCTPNatHook::~SCTPNatHook()
 
 void SCTPNatHook::initialize()
 {
-    RoutingTableAccess routingTableAccess;
-    InterfaceTableAccess interfaceTableAccess;
-
-    ipLayer = check_and_cast<IPv4*>(getParentModule()->getSubmodule("networkLayer")->getSubmodule("ip"));
-    rt = routingTableAccess.get();
-    ift = interfaceTableAccess.get();
+    ipLayer = check_and_cast<IPv4*>(getParentModule()->getSubmodule("networkLayer")->getSubmodule("ip"));   //FIXME use getModuleFromPar()
+    rt = IPv4RoutingTableAccess().get();   //FIXME use getModuleFromPar()
+    ift = InterfaceTableAccess().get();   //FIXME use getModuleFromPar()
     natTable = new SCTPNatTable();
     nattedPackets = 0;
 
     ipLayer->registerHook(0, this);
 }
 
-INetfilter::IHook::Result SCTPNatHook::datagramForwardHook(IPv4Datagram* datagram, const InterfaceEntry* inIE, const InterfaceEntry*& outIE, IPv4Address& nextHopAddr)
+INetfilter::IHook::Result SCTPNatHook::datagramForwardHook(INetworkDatagram* datagram, const InterfaceEntry* inIE, const InterfaceEntry*& outIE, Address& nextHopAddr)
 {
     SCTPNatEntry* entry;
     SCTPChunk* chunk;
@@ -119,13 +115,13 @@ INetfilter::IHook::Result SCTPNatHook::datagramForwardHook(IPv4Datagram* datagra
     return INetfilter::IHook::ACCEPT;
 }
 
-INetfilter::IHook::Result SCTPNatHook::datagramPreRoutingHook(IPv4Datagram* datagram, const InterfaceEntry* inIE, const InterfaceEntry*& outIE, IPv4Address& nextHopAddr)
+INetfilter::IHook::Result SCTPNatHook::datagramPreRoutingHook(INetworkDatagram* datagram, const InterfaceEntry* inIE, const InterfaceEntry*& outIE, Address& nextHopAddr)
 {
     SCTPNatEntry* entry;
     SCTPChunk* chunk;
     IPv4Datagram *dgram;
 
-    dgram = dynamic_cast<IPv4Datagram *>(datagram);
+    dgram = check_and_cast<IPv4Datagram *>(datagram);
     if (SCTPAssociation::getAddressLevel(dgram->getSrcAddress())==3) {
         return INetfilter::IHook::ACCEPT;
     }
@@ -166,7 +162,7 @@ INetfilter::IHook::Result SCTPNatHook::datagramPreRoutingHook(IPv4Datagram* data
                         SCTPAsconfChunk* asconfChunk=check_and_cast<SCTPAsconfChunk*>(chunk);
                         entry->setLocalVTag(asconfChunk->getPeerVTag());
                     }
-                    dgram->setDestAddress(entry->getLocalAddress().get4());
+                    dgram->setDestAddress(entry->getLocalAddress().toIPv4());
                     sctpMsg->setDestPort(entry->getLocalPort());
                     sctpEV3<<"destAddress set to "<<dgram->getDestAddress()<<", destPort set to "<<sctpMsg->getDestPort()<<"\n";
                 }
@@ -195,7 +191,7 @@ INetfilter::IHook::Result SCTPNatHook::datagramPreRoutingHook(IPv4Datagram* data
         }
         else
         {
-            dgram->setDestAddress(entry->getLocalAddress().get4());
+            dgram->setDestAddress(entry->getLocalAddress().toIPv4());
             sctpMsg->setDestPort(entry->getLocalPort());
             if (entry->getGlobalVTag()==0 && chunk->getChunkType()==INIT_ACK)
             {
@@ -239,9 +235,9 @@ INetfilter::IHook::Result SCTPNatHook::datagramPreRoutingHook(IPv4Datagram* data
                 SCTPInitChunk* initChunk=check_and_cast<SCTPInitChunk*>(chunk);
                 entry2->setGlobalVTag(initChunk->getInitTag());
                 natTable->natEntries.push_back(entry2);
-                dgram->setDestAddress(entry->getLocalAddress().get4());
+                dgram->setDestAddress(entry->getLocalAddress().toIPv4());
                 sctpMsg->setDestPort(entry->getLocalPort());
-                dgram->setSrcAddress(entry->getGlobalAddress().get4());
+                dgram->setSrcAddress(entry->getGlobalAddress().toIPv4());
                 sctpMsg->setSrcPort(entry->getGlobalPort());
                 sctpEV3<<"added additional entry for local deliver\n";
                 natTable->printNatTable();
@@ -254,9 +250,9 @@ INetfilter::IHook::Result SCTPNatHook::datagramPreRoutingHook(IPv4Datagram* data
             entry = natTable->getLocalEntry(dgram->getDestAddress(), sctpMsg->getSrcPort(), sctpMsg->getDestPort(), sctpMsg->getTag());
             if (entry!=NULL)
             {
-                dgram->setDestAddress(entry->getLocalAddress().get4());
+                dgram->setDestAddress(entry->getLocalAddress().toIPv4());
                 sctpMsg->setDestPort(entry->getLocalPort());
-                dgram->setSrcAddress(entry->getGlobalAddress().get4());
+                dgram->setSrcAddress(entry->getGlobalAddress().toIPv4());
                 sctpMsg->setSrcPort(entry->getGlobalPort());
             }
             else
@@ -270,17 +266,17 @@ INetfilter::IHook::Result SCTPNatHook::datagramPreRoutingHook(IPv4Datagram* data
     return INetfilter::IHook::ACCEPT;
 }
 
-INetfilter::IHook::Result SCTPNatHook::datagramPostRoutingHook(IPv4Datagram* datagram, const InterfaceEntry* inIE, const InterfaceEntry*& outIE, IPv4Address& nextHopAddr)
+INetfilter::IHook::Result SCTPNatHook::datagramPostRoutingHook(INetworkDatagram* datagram, const InterfaceEntry* inIE, const InterfaceEntry*& outIE, Address& nextHopAddr)
 {
     return INetfilter::IHook::ACCEPT;
 }
 
-INetfilter::IHook::Result SCTPNatHook::datagramLocalInHook(IPv4Datagram* datagram, const InterfaceEntry* inIE)
+INetfilter::IHook::Result SCTPNatHook::datagramLocalInHook(INetworkDatagram* datagram, const InterfaceEntry* inIE)
 {
     return INetfilter::IHook::ACCEPT;
 }
 
-INetfilter::IHook::Result SCTPNatHook::datagramLocalOutHook(IPv4Datagram* datagram, const InterfaceEntry*& outIE, IPv4Address& nextHopAddr)
+INetfilter::IHook::Result SCTPNatHook::datagramLocalOutHook(INetworkDatagram* datagram, const InterfaceEntry*& outIE, Address& nextHopAddr)
 {
     return INetfilter::IHook::ACCEPT;
 }

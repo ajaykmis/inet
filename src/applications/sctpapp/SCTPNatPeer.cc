@@ -22,7 +22,7 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include "SCTPAssociation.h"
-#include "IPvXAddressResolver.h"
+#include "AddressResolver.h"
 #include "NodeStatus.h"
 
 #define MSGKIND_CONNECT  0
@@ -57,7 +57,7 @@ void SCTPNatPeer::initialize()
     WATCH(numRequestsToSend);
     // parameters
     const char *addressesString = par("localAddress");
-    AddressVector addresses = IPvXAddressResolver().resolve(cStringTokenizer(addressesString).asVector());
+    AddressVector addresses = AddressResolver().resolve(cStringTokenizer(addressesString).asVector());
     int32 port = par("localPort");
     echo = par("echo").boolValue();
     delay = par("echoDelay");
@@ -167,7 +167,7 @@ void SCTPNatPeer::connectx(AddressVector connectAddressList, int32 connectPort)
     }
 }
 
-void SCTPNatPeer::connect(IPvXAddress connectAddress, int32 connectPort)
+void SCTPNatPeer::connect(Address connectAddress, int32 connectPort)
 {
     clientSocket.setOutboundStreams(outboundStreams);
     clientSocket.setInboundStreams(inboundStreams);
@@ -504,7 +504,7 @@ void SCTPNatPeer::handleTimer(cMessage *msg)
     {
         case MSGKIND_CONNECT:
             sctpEV3 << "starting session call connect\n";
-            connect(IPvXAddressResolver().resolve(par("connectAddress"), 1), par("connectPort"));
+            connect(AddressResolver().resolve(par("connectAddress"), 1), par("connectPort"));
             delete msg;
             break;
         case SCTP_C_SEND:
@@ -571,7 +571,7 @@ void SCTPNatPeer::socketPeerClosed(int32, void *)
         if (rendezvous)
         {
             const char *addressesString = par("localAddress");
-            AddressVector addresses = IPvXAddressResolver().resolve(cStringTokenizer(addressesString).asVector());
+            AddressVector addresses = AddressResolver().resolve(cStringTokenizer(addressesString).asVector());
             int32 port = par("localPort");
             SCTPSocket* socket = new SCTPSocket();
             socket->setOutputGate(gate("sctpOut"));
@@ -604,7 +604,7 @@ void SCTPNatPeer::socketClosed(int32, void *)
     if (rendezvous)
     {
         const char *addressesString = par("localAddress");
-        AddressVector addresses = IPvXAddressResolver().resolve(cStringTokenizer(addressesString).asVector());
+        AddressVector addresses = AddressResolver().resolve(cStringTokenizer(addressesString).asVector());
         int32 port = par("localPort");
         SCTPSocket* socket = new SCTPSocket();
         socket->setOutputGate(gate("sctpOut"));
@@ -708,11 +708,11 @@ void SCTPNatPeer::socketEstablished(int32, void *, uint64 buffer )
         msg->setMulti((bool)par("multi"));
         msg->setPeer1(par("ownName"));
         msg->setPeer1AddressesArraySize(1);
-        msg->setPeer1Addresses(0, IPvXAddress("0.0.0.0"));
+        msg->setPeer1Addresses(0, Address());
         msg->setPortPeer1(par("localPort"));
         msg->setPeer2(par("peerName"));
         msg->setPeer2AddressesArraySize(1);
-        msg->setPeer2Addresses(0, IPvXAddress("0.0.0.0"));
+        msg->setPeer2Addresses(0, Address());
         msg->setPortPeer2(0);
         cPacket* cmsg = new cPacket(msg->getName());
         SCTPSimpleMessage* smsg = new SCTPSimpleMessage("nat_data");
@@ -890,7 +890,7 @@ void SCTPNatPeer::sendqueueFullArrived(int32 assocId)
     sendAllowed = false;
 }
 
-void SCTPNatPeer::addressAddedArrived(int32 assocId, IPvXAddress localAddr, IPvXAddress remoteAddr)
+void SCTPNatPeer::addressAddedArrived(int32 assocId, Address localAddr, Address remoteAddr)
 {
     sctpEV3 << getFullPath() << ": addressAddedArrived for remoteAddr " << remoteAddr << "\n";
     localAddressList.push_back(localAddr);
@@ -902,13 +902,13 @@ void SCTPNatPeer::addressAddedArrived(int32 assocId, IPvXAddress localAddr, IPvX
         msg->setMulti((bool)par("multi"));
         msg->setPeer1(par("ownName"));
         msg->setPeer1AddressesArraySize(2);
-        msg->setPeer1Addresses(0, IPvXAddress("0.0.0.0"));
-        msg->setPeer1Addresses(1, IPvXAddress("0.0.0.0"));
+        msg->setPeer1Addresses(0, Address());
+        msg->setPeer1Addresses(1, Address());
         msg->setPortPeer1(par("localPort"));
         msg->setPeer2(par("peerName"));
         msg->setPeer2AddressesArraySize(2);
-        msg->setPeer2Addresses(0, IPvXAddress("0.0.0.0"));
-        msg->setPeer2Addresses(1, IPvXAddress("0.0.0.0"));
+        msg->setPeer2Addresses(0, Address());
+        msg->setPeer2Addresses(1, Address());
         msg->setPortPeer2(0);
         cPacket* cmsg = new cPacket(msg->getName());
         SCTPSimpleMessage* smsg = new SCTPSimpleMessage("nat_data");

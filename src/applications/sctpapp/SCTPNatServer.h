@@ -28,14 +28,14 @@
 typedef struct natInfo {
     bool multi;
     uint32 peer1;
-    IPvXAddress peer1Address1;
-    IPvXAddress peer1Address2;
+    Address peer1Address1;
+    Address peer1Address2;
     uint32 peer1Assoc;
     uint32 peer1Port;
     int32 peer1Gate;
     uint32 peer2;
-    IPvXAddress peer2Address1;
-    IPvXAddress peer2Address2;
+    Address peer2Address1;
+    Address peer2Address2;
     uint32 peer2Assoc;
     uint32 peer2Port;
     int32 peer2Gate;
@@ -66,7 +66,7 @@ class INET_API SCTPNatServer : public cSimpleModule
     struct pathStatus {
         bool active;
         bool primaryPath;
-        IPvXAddress  pid;
+        Address  pid;
     };
 
     void initialize();

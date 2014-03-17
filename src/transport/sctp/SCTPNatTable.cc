@@ -45,7 +45,7 @@ SCTPNatTable::~SCTPNatTable()
         delete natEntries[i];
 }
 
-SCTPNatEntry* SCTPNatTable::findNatEntry(IPvXAddress srcAddr, uint16 srcPrt, IPvXAddress destAddr, uint16 destPrt, uint32 globalVtag)
+SCTPNatEntry* SCTPNatTable::findNatEntry(Address srcAddr, uint16 srcPrt, Address destAddr, uint16 destPrt, uint32 globalVtag)
 {
     // linear search is OK because normally we don't have many interfaces and this func is rarely called
     Enter_Method_Silent();
@@ -58,7 +58,7 @@ SCTPNatEntry* SCTPNatTable::findNatEntry(IPvXAddress srcAddr, uint16 srcPrt, IPv
     return NULL;
 }
 
-SCTPNatEntry* SCTPNatTable::getEntry(IPvXAddress globalAddr, uint16 globalPrt, IPvXAddress nattedAddr, uint16 nattedPrt, uint32 localVtag)
+SCTPNatEntry* SCTPNatTable::getEntry(Address globalAddr, uint16 globalPrt, Address nattedAddr, uint16 nattedPrt, uint32 localVtag)
 {
     // linear search is OK because normally we don't have many interfaces and this func is rarely called
     Enter_Method_Silent();
@@ -73,7 +73,7 @@ SCTPNatEntry* SCTPNatTable::getEntry(IPvXAddress globalAddr, uint16 globalPrt, I
     return NULL;
 }
 
-SCTPNatEntry* SCTPNatTable::getSpecialEntry(IPvXAddress globalAddr, uint16 globalPrt, IPvXAddress nattedAddr, uint16 nattedPrt)
+SCTPNatEntry* SCTPNatTable::getSpecialEntry(Address globalAddr, uint16 globalPrt, Address nattedAddr, uint16 nattedPrt)
 {
     // linear search is OK because normally we don't have many interfaces and this func is rarely called
     Enter_Method_Silent();
@@ -90,7 +90,7 @@ SCTPNatEntry* SCTPNatTable::getSpecialEntry(IPvXAddress globalAddr, uint16 globa
     return NULL;
 }
 
-SCTPNatEntry* SCTPNatTable::getLocalInitEntry(IPvXAddress globalAddr, uint16 localPrt, uint16 globalPrt)
+SCTPNatEntry* SCTPNatTable::getLocalInitEntry(Address globalAddr, uint16 localPrt, uint16 globalPrt)
 {
     // linear search is OK because normally we don't have many interfaces and this func is rarely called
     Enter_Method_Silent();
@@ -103,7 +103,7 @@ SCTPNatEntry* SCTPNatTable::getLocalInitEntry(IPvXAddress globalAddr, uint16 loc
     return NULL;
 }
 
-SCTPNatEntry* SCTPNatTable::getLocalEntry(IPvXAddress globalAddr, uint16 localPrt, uint16 globalPrt, uint32 localVtag)
+SCTPNatEntry* SCTPNatTable::getLocalEntry(Address globalAddr, uint16 localPrt, uint16 globalPrt, uint32 localVtag)
 {
     // linear search is OK because normally we don't have many interfaces and this func is rarely called
     Enter_Method_Silent();
@@ -140,9 +140,9 @@ void SCTPNatTable::printNatTable()
 
 SCTPNatEntry::SCTPNatEntry()
 {
-    localAddress = IPvXAddress("0.0.0.0");
-    globalAddress = IPvXAddress("0.0.0.0");
-    nattedAddress = IPvXAddress("0.0.0.0");
+    localAddress = Address();
+    globalAddress = Address();
+    nattedAddress = Address();
     localPort = 0;
     globalPort = 0;
     nattedPort = 0;
