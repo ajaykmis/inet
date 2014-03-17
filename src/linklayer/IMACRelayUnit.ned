@@ -42,7 +42,7 @@ package inet.linklayer;
 // per second, amount of memory available in the switch, etc.)
 // C++ implementations can subclass from the class <tt>MACRelayUnitBase</tt>.
 //
-// Known implementations are ~MACRelayUnitNP and ~MACRelayUnitPP.
+// Known implementations are ~MACRelayUnit and ~Ieee8021dRelay.
 //
 moduleinterface IMACRelayUnit
 {
@@ -56,6 +56,8 @@ moduleinterface IMACRelayUnit
     gates:
         input ifIn[] @labels(EtherFrame);
         output ifOut[] @labels(EtherFrame);
+        input stpIn @loose;
+        output stpOut @loose;
 }
 
 simple MACRelayUnit_None like IMACRelayUnit
@@ -70,5 +72,7 @@ simple MACRelayUnit_None like IMACRelayUnit
     gates:
         input ifIn[] @labels(EtherFrame);
         output ifOut[] @labels(EtherFrame);
+        input stpIn @loose;
+        output stpOut @loose;
 }
 
