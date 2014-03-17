@@ -102,7 +102,7 @@ void SCTPNatPeer::sendOrSchedule(cPacket *msg)
 void SCTPNatPeer::generateAndSend()
 {
     uint32 numBytes;
-    sctpEV3 << "SCTPNatPeer:generateAndSend \n";
+    EV << "SCTPNatPeer:generateAndSend \n";
 
     cPacket* cmsg = new cPacket("CMSG");
     SCTPSimpleMessage* msg = new SCTPSimpleMessage("Server");
@@ -141,8 +141,8 @@ void SCTPNatPeer::connectx(AddressVector connectAddressList, int32 connectPort)
     uint32 inStreams = par("inboundStreams");
     clientSocket.setInboundStreams(inStreams);
 
-    sctpEV3 << "issuing OPEN command\n";
-    sctpEV3 << "Assoc " << clientSocket.getConnectionId() << "::connect to  port " << connectPort << "\n";
+    EV << "issuing OPEN command\n";
+    EV << "Assoc " << clientSocket.getConnectionId() << "::connect to  port " << connectPort << "\n";
     bool streamReset = par("streamReset");
     clientSocket.connectx(connectAddressList, connectPort, streamReset, (int32)par("prMethod"), (uint32)par("numRequestsPerSession"));
     numSessions++;
@@ -153,7 +153,7 @@ void SCTPNatPeer::connectx(AddressVector connectAddressList, int32 connectPort)
     {
         cMessage* cmsg = new cMessage("StreamReset");
         cmsg->setKind(MSGKIND_RESET);
-        sctpEV3 << "StreamReset Timer scheduled at " << simulation.getSimTime() << "\n";
+        EV << "StreamReset Timer scheduled at " << simulation.getSimTime() << "\n";
         scheduleAt(simulation.getSimTime()+(double)par("streamRequestTime"), cmsg);
     }
     uint32 streamNum = 0;
@@ -172,8 +172,8 @@ void SCTPNatPeer::connect(Address connectAddress, int32 connectPort)
     clientSocket.setOutboundStreams(outboundStreams);
     clientSocket.setInboundStreams(inboundStreams);
 
-    sctpEV3 << "issuing OPEN command\n";
-    sctpEV3 << "Assoc " << clientSocket.getConnectionId() << "::connect to address " << connectAddress << ", port " << connectPort << "\n";
+    EV << "issuing OPEN command\n";
+    EV << "Assoc " << clientSocket.getConnectionId() << "::connect to address " << connectAddress << ", port " << connectPort << "\n";
     bool streamReset = par("streamReset");
     clientSocket.connect(connectAddress, connectPort, streamReset, (int32)par("prMethod"), (uint32)par("numRequestsPerSession"));
     numSessions++;
@@ -184,7 +184,7 @@ void SCTPNatPeer::connect(Address connectAddress, int32 connectPort)
     {
         cMessage* cmsg = new cMessage("StreamReset");
         cmsg->setKind(MSGKIND_RESET);
-        sctpEV3 << "StreamReset Timer scheduled at " << simulation.getSimTime() << "\n";
+        EV << "StreamReset Timer scheduled at " << simulation.getSimTime() << "\n";
         scheduleAt(simulation.getSimTime()+(double)par("streamRequestTime"), cmsg);
     }
     uint32 streamNum = 0;
@@ -206,7 +206,7 @@ void SCTPNatPeer::handleMessage(cMessage *msg)
     {
         handleTimer(msg);
     } else {
-        sctpEV3 << "SCTPNatPeer::handleMessage kind=" << SCTPAssociation::indicationName(msg->getKind()) << " (" << msg->getKind() << ")\n";
+        EV << "SCTPNatPeer::handleMessage kind=" << SCTPAssociation::indicationName(msg->getKind()) << " (" << msg->getKind() << ")\n";
     switch (msg->getKind())
     {
         case SCTP_I_ADDRESS_ADDED:
@@ -305,7 +305,7 @@ void SCTPNatPeer::handleMessage(cMessage *msg)
                             sendOrSchedule(cmsg);
                         }
 
-                        sctpEV3 << "!!!!!!!!!!!!!!!All data sent from Peer !!!!!!!!!!\n";
+                        EV << "!!!!!!!!!!!!!!!All data sent from Peer !!!!!!!!!!\n";
 
                         RcvdPacketsPerAssoc::iterator j = rcvdPacketsPerAssoc.find(serverAssocId);
                         if (j->second == 0 && (simtime_t)par("waitToClose")>0)
@@ -318,7 +318,7 @@ void SCTPNatPeer::handleMessage(cMessage *msg)
                         }
                         else
                         {
-                            sctpEV3 << "no more packets to send, call shutdown for assoc " << serverAssocId << "\n";
+                            EV << "no more packets to send, call shutdown for assoc " << serverAssocId << "\n";
                             cPacket* cmsg = new cPacket("ShutdownRequest");
                             //SCTPInfo* qinfo = new SCTPInfo();
                             SCTPCommand* cmd = new SCTPCommand();
@@ -368,9 +368,9 @@ void SCTPNatPeer::handleMessage(cMessage *msg)
                 if (nat->getMulti())
                 {
                     peerAddressList.push_back(nat->getPeer2Addresses(0));
-                    sctpEV3<<"address 0: " << nat->getPeer2Addresses(0) << endl;
+                    EV<<"address 0: " << nat->getPeer2Addresses(0) << endl;
                     peerAddressList.push_back(nat->getPeer2Addresses(1));
-                    sctpEV3<<"address 1: " << nat->getPeer2Addresses(1) << endl;
+                    EV<<"address 1: " << nat->getPeer2Addresses(1) << endl;
                 }
                 else
                 {
@@ -447,7 +447,7 @@ void SCTPNatPeer::handleMessage(cMessage *msg)
         {
             SCTPCommand *command = check_and_cast<SCTPCommand *>(msg->removeControlInfo());
             id = command->getAssocId();
-            sctpEV3 << "peer: SCTP_I_SHUTDOWN_RECEIVED for assoc " << id << "\n";
+            EV << "peer: SCTP_I_SHUTDOWN_RECEIVED for assoc " << id << "\n";
             RcvdPacketsPerAssoc::iterator i = rcvdPacketsPerAssoc.find(id);
             if (i==rcvdPacketsPerAssoc.end() && (clientSocket.getState()==SCTPSocket::CONNECTED))
                 clientSocket.processMessage(PK(msg));
@@ -497,19 +497,19 @@ void SCTPNatPeer::handleTimer(cMessage *msg)
     int32 id;
 
 
-    sctpEV3 << "SCTPNatPeer::handleTimer\n";
+    EV << "SCTPNatPeer::handleTimer\n";
 
     SCTPConnectInfo *connectInfo = dynamic_cast<SCTPConnectInfo *>(msg->getControlInfo());
     switch (msg->getKind())
     {
         case MSGKIND_CONNECT:
-            sctpEV3 << "starting session call connect\n";
+            EV << "starting session call connect\n";
             connect(AddressResolver().resolve(par("connectAddress"), 1), par("connectPort"));
             delete msg;
             break;
         case SCTP_C_SEND:
 
-            sctpEV3 << "SCTPNatPeer:MSGKIND_SEND\n";
+            EV << "SCTPNatPeer:MSGKIND_SEND\n";
 
             if (numRequestsToSend>0)
             {
@@ -521,7 +521,7 @@ void SCTPNatPeer::handleTimer(cMessage *msg)
             break;
         case SCTP_I_ABORT:
 
-            sctpEV3 << "SCTPNatPeer:MsgKIND_ABORT for assoc " << atoi(msg->getName()) << "\n";
+            EV << "SCTPNatPeer:MsgKIND_ABORT for assoc " << atoi(msg->getName()) << "\n";
 
             cmsg = new cPacket("CLOSE", SCTP_C_CLOSE);
             cmd = new SCTPCommand();
@@ -532,13 +532,13 @@ void SCTPNatPeer::handleTimer(cMessage *msg)
             break;
         case SCTP_C_RECEIVE:
 
-            sctpEV3 << "SCTPNatPeer:SCTP_C_RECEIVE\n";
+            EV << "SCTPNatPeer:SCTP_C_RECEIVE\n";
             schedule = true;
             sendOrSchedule(PK(msg));
             break;
         default:
 
-            sctpEV3 << "MsgKind =" << msg->getKind() << " unknown\n";
+            EV << "MsgKind =" << msg->getKind() << " unknown\n";
 
             break;
     }
@@ -565,7 +565,7 @@ void SCTPNatPeer::socketPeerClosed(int32, void *)
     // close the connection (if not already closed)
     if (clientSocket.getState()==SCTPSocket::PEER_CLOSED)
     {
-        sctpEV3 << "remote SCTP closed, closing here as well\n";
+        EV << "remote SCTP closed, closing here as well\n";
         setStatusString("closed");
         clientSocket.close();
         if (rendezvous)
@@ -598,7 +598,7 @@ void SCTPNatPeer::socketClosed(int32, void *)
 {
     // *redefine* to start another session etc.
 
-    sctpEV3 << "connection closed\n";
+    EV << "connection closed\n";
     setStatusString("closed");
     clientSocket.close();
     if (rendezvous)
@@ -664,13 +664,13 @@ void SCTPNatPeer::setStatusString(const char *s)
 
 void SCTPNatPeer::sendRequest(bool last)
 {
-    sctpEV3 << "sending request, " << numRequestsToSend-1 << " more to go\n";
+    EV << "sending request, " << numRequestsToSend-1 << " more to go\n";
     uint32 i;
     int64 numBytes = (int64)(long) par("requestLength");
     if (numBytes < 1)
         numBytes = 1;
 
-    sctpEV3 << "SCTPNatPeer: sending " << numBytes << " data bytes\n";
+    EV << "SCTPNatPeer: sending " << numBytes << " data bytes\n";
 
     cPacket* cmsg = new cPacket("AppData");
     SCTPSimpleMessage* msg = new SCTPSimpleMessage("data");
@@ -699,7 +699,7 @@ void SCTPNatPeer::socketEstablished(int32, void *, uint64 buffer )
 {
     int32 count = 0;
     // *redefine* to perform or schedule first sending
-    sctpEV3 << "SCTPNatPeer: socketEstablished\n";
+    EV << "SCTPNatPeer: socketEstablished\n";
     setStatusString("connected");
     if (rendezvous)
     {
@@ -736,7 +736,7 @@ void SCTPNatPeer::socketEstablished(int32, void *, uint64 buffer )
     }
     else
     {
-        sctpEV3 <<" determine number of requests in this session\n";
+        EV <<" determine number of requests in this session\n";
         numRequestsToSend = (int64) (long)par("numRequestsPerSession");
         numPacketsToReceive = (int64)(long) par("numPacketsToReceive");
         if (numRequestsToSend<1)
@@ -786,7 +786,7 @@ void SCTPNatPeer::socketEstablished(int32, void *, uint64 buffer )
                 }
                 if (numRequestsToSend == 0 && (simtime_t)par("waitToClose")==0)
                 {
-                    sctpEV3 << "socketEstablished:no more packets to send, call shutdown\n";
+                    EV << "socketEstablished:no more packets to send, call shutdown\n";
                     clientSocket.shutdown();
                 }
             }
@@ -811,7 +811,7 @@ void SCTPNatPeer::sendRequestArrived()
 {
     int32 count = 0;
 
-    sctpEV3 << "sendRequestArrived numRequestsToSend=" << numRequestsToSend << "\n";
+    EV << "sendRequestArrived numRequestsToSend=" << numRequestsToSend << "\n";
     while (numRequestsToSend > 0 && count++ < queueSize && sendAllowed)
     {
         numRequestsToSend--;
@@ -822,7 +822,7 @@ void SCTPNatPeer::sendRequestArrived()
 
         if (numRequestsToSend == 0)
         {
-            sctpEV3 << "no more packets to send, call shutdown\n";
+            EV << "no more packets to send, call shutdown\n";
             clientSocket.shutdown();
         }
     }
@@ -835,7 +835,7 @@ void SCTPNatPeer::socketDataArrived(int32, void *, cPacket *msg, bool)
     // *redefine* to perform or schedule next sending
     packetsRcvd++;
 
-    sctpEV3 << "Client received packet Nr " << packetsRcvd << " from SCTP\n";
+    EV << "Client received packet Nr " << packetsRcvd << " from SCTP\n";
     SCTPCommand* ind = check_and_cast<SCTPCommand*>(msg->getControlInfo());
     bytesRcvd += msg->getBitLength()/8;
 
@@ -860,7 +860,7 @@ void SCTPNatPeer::socketDataArrived(int32, void *, cPacket *msg, bool)
         numPacketsToReceive--;
         if (numPacketsToReceive == 0)
         {
-            sctpEV3 << "Peer: all packets received\n";
+            EV << "Peer: all packets received\n";
         }
     }
 }
@@ -892,7 +892,7 @@ void SCTPNatPeer::sendqueueFullArrived(int32 assocId)
 
 void SCTPNatPeer::addressAddedArrived(int32 assocId, Address localAddr, Address remoteAddr)
 {
-    sctpEV3 << getFullPath() << ": addressAddedArrived for remoteAddr " << remoteAddr << "\n";
+    EV << getFullPath() << ": addressAddedArrived for remoteAddr " << remoteAddr << "\n";
     localAddressList.push_back(localAddr);
     clientSocket.addAddress(localAddr);
     if (rendezvous)

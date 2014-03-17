@@ -255,7 +255,7 @@ int32 SCTPAssociation::rpPathBlockingControl(SCTPPathVariables* path, const doub
             const simtime_t timeout = (state->rpScaleBlockingTimeout == true) ?
                                       path->cmtGroupPaths * path->pathRto :
                                       path->pathRto;
-            sctpEV3 << "Blocking " << path->remoteAddress << " for " << timeout << endl;
+            EV << "Blocking " << path->remoteAddress << " for " << timeout << endl;
 
             path->blockingTimeout = simTime() + timeout;
             assert(!path->BlockingTimer->isScheduled());
@@ -274,7 +274,7 @@ void SCTPAssociation::cwndUpdateAfterSack()
             // ====== Retransmission required -> reduce congestion window ======
             if (path->requiresRtx) {
                 double decreaseFactor = 0.5;
-                sctpEV3 << assocId << ": "<< simTime() << ":\tCC [cwndUpdateAfterSack]\t" << path->remoteAddress
+                EV << assocId << ": "<< simTime() << ":\tCC [cwndUpdateAfterSack]\t" << path->remoteAddress
                         << " (cmtCCGroup=" << path->cmtCCGroup << ")"
                         << "\tsst="     << path->ssthresh
                         << "\tcwnd="    << path->cwnd
@@ -283,7 +283,7 @@ void SCTPAssociation::cwndUpdateAfterSack()
                         << "\tBW.CWND=" << path->cmtGroupTotalCwndBandwidth;
                 if(state->highSpeedCC == true) {
                    decreaseFactor = HighSpeedCwndAdjustmentTable[path->highSpeedCCThresholdIdx].decreaseFactor;
-                   sctpEV3 << "\tHighSpeedDecreaseFactor=" << decreaseFactor;
+                   EV << "\tHighSpeedDecreaseFactor=" << decreaseFactor;
                 }
 
                 // ====== SCTP or CMT-SCTP (independent congestion control) =====
@@ -509,7 +509,7 @@ void SCTPAssociation::cwndUpdateBytesAcked(SCTPPathVariables* path,
                     }
                 }
                 path->vectorPathPbAcked->record(path->partialBytesAcked);
-                sctpEV3 << "\t=>\tsst=" << path->ssthresh
+                EV << "\t=>\tsst=" << path->ssthresh
                         << "\tcwnd=" << path->cwnd << endl;
 
                 recordCwndUpdate(path);
@@ -541,7 +541,7 @@ void SCTPAssociation::cwndUpdateBytesAcked(SCTPPathVariables* path,
             if(state->highSpeedCC == true) {
                updateHighSpeedCCThresholdIdx(path);
                increaseFactor = HighSpeedCwndAdjustmentTable[path->highSpeedCCThresholdIdx].increaseFactor;
-               sctpEV3 << "HighSpeedCC Increase: factor=" << increaseFactor << endl;
+               EV << "HighSpeedCC Increase: factor=" << increaseFactor << endl;
             }
 
             const bool avancedAndEnoughOutstanding =
@@ -556,7 +556,7 @@ void SCTPAssociation::cwndUpdateBytesAcked(SCTPPathVariables* path,
                     (path->partialBytesAcked + path->pmtu > path->cwnd) );
 
             if ( avancedAndEnoughOutstanding && enoughPartiallyAcked) {
-               sctpEV3 << assocId << ": " << simTime() << ":\tCC [cwndUpdateBytesAcked-CgAvoidance]\t" << path->remoteAddress
+               EV << assocId << ": " << simTime() << ":\tCC [cwndUpdateBytesAcked-CgAvoidance]\t" << path->remoteAddress
                        << " (cmtCCGroup=" << path->cmtCCGroup << ")"
                        << "\tacked="   << ackedBytes
                        << "\tsst="     << path->ssthresh
@@ -606,7 +606,7 @@ void SCTPAssociation::cwndUpdateBytesAcked(SCTPPathVariables* path,
                         throw cRuntimeError("Implementation for this cmtCCVariant is missing!");
                     }
                 }
-                sctpEV3 << "\t=>\tsst=" << path->ssthresh
+                EV << "\t=>\tsst=" << path->ssthresh
                         << "\tcwnd=" << path->cwnd << endl;
 
                 recordCwndUpdate(path);

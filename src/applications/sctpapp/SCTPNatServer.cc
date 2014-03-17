@@ -61,7 +61,7 @@ void SCTPNatServer::initialize()
     else
         socket->bindx(addresses, port);
     socket->listen(true, false, par("numPacketsToSendPerClient"));
-    sctpEV3 << "SCTPNatServer::initialized listen port=" << port << "\n";
+    EV << "SCTPNatServer::initialized listen port=" << port << "\n";
 
     shutdownReceived = false;
 }
@@ -82,8 +82,8 @@ void SCTPNatServer::sendInfo(NatInfo* info)
     msg->setPeer2Addresses(0, info->peer2Address1);
     msg->setPeer2Addresses(1, info->peer2Address2);
     msg->setPortPeer2(info->peer2Port);
-    sctpEV3 << "Info for peer1: peer1-1=" << msg->getPeer1Addresses(0) << " peer2-1=" << msg->getPeer2Addresses(0) << "\n";
-    if (info->multi) sctpEV3 << " peer1-2=" << msg->getPeer1Addresses(1) << " peer2-2=" << msg->getPeer2Addresses(1)  << endl;
+    EV << "Info for peer1: peer1-1=" << msg->getPeer1Addresses(0) << " peer2-1=" << msg->getPeer2Addresses(0) << "\n";
+    if (info->multi) EV << " peer1-2=" << msg->getPeer1Addresses(1) << " peer2-2=" << msg->getPeer2Addresses(1)  << endl;
     cPacket* cmsg = new cPacket(msg->getName());
     SCTPSimpleMessage* smsg = new SCTPSimpleMessage("nat_data");
     smsg->setEncaps(true);
@@ -101,12 +101,12 @@ void SCTPNatServer::sendInfo(NatInfo* info)
     cmsg->setKind(SCTP_C_SEND);
     cmsg->setControlInfo(cmd);
     send(cmsg, "sctpOut");
-    sctpEV3 << "info sent to peer1\n";
+    EV << "info sent to peer1\n";
 
     cPacket* abortMsg = new cPacket("abortPeer1", SCTP_C_SHUTDOWN);
     abortMsg->setControlInfo(cmd->dup());
     send(abortMsg, "sctpOut");
-    sctpEV3 << "abortMsg sent to peer1\n";
+    EV << "abortMsg sent to peer1\n";
 
     msg = new NatMessage("Rendezvous");
     msg->setKind(SCTP_C_NAT_INFO);
@@ -121,8 +121,8 @@ void SCTPNatServer::sendInfo(NatInfo* info)
     msg->setPeer2Addresses(0, info->peer1Address1);
     msg->setPeer2Addresses(1, info->peer1Address2);
     msg->setPortPeer2(info->peer1Port);
-    sctpEV3 << "Info for peer2: peer1-1=" << msg->getPeer1Addresses(0) << " peer2-1=" << msg->getPeer2Addresses(0) << "\n";
-    if (info->multi) sctpEV3 << " peer1-2=" << msg->getPeer1Addresses(1) << " peer2-2=" << msg->getPeer2Addresses(1)  << endl;    cmsg = new cPacket(msg->getName());
+    EV << "Info for peer2: peer1-1=" << msg->getPeer1Addresses(0) << " peer2-1=" << msg->getPeer2Addresses(0) << "\n";
+    if (info->multi) EV << " peer1-2=" << msg->getPeer1Addresses(1) << " peer2-2=" << msg->getPeer2Addresses(1)  << endl;    cmsg = new cPacket(msg->getName());
     smsg = new SCTPSimpleMessage("nat_data");
     smsg->setEncaps(true);
     smsg->encapsulate(msg);
@@ -138,12 +138,12 @@ void SCTPNatServer::sendInfo(NatInfo* info)
     cmd->setLast(true);
     cmsg->setKind(SCTP_C_SEND);
     cmsg->setControlInfo(cmd);
-    sctpEV3 << "info sent to peer2\n";
+    EV << "info sent to peer2\n";
     send(cmsg, "sctpOut");
     abortMsg = new cPacket("abortPeer2", SCTP_C_SHUTDOWN);
     abortMsg->setControlInfo(cmd->dup());
     send(abortMsg, "sctpOut");
-    sctpEV3 << "abortMsg sent to peer2\n";
+    EV << "abortMsg sent to peer2\n";
 }
 
 void SCTPNatServer::generateAndSend()
@@ -182,7 +182,7 @@ void SCTPNatServer::handleMessage(cMessage *msg)
     }
     else
     {
-        sctpEV3 << "SCTPNatServer::handleMessage kind=" << SCTPAssociation::indicationName(msg->getKind()) << " (" << msg->getKind() << ")\n";
+        EV << "SCTPNatServer::handleMessage kind=" << SCTPAssociation::indicationName(msg->getKind()) << " (" << msg->getKind() << ")\n";
         switch (msg->getKind())
         {
             case SCTP_I_PEER_CLOSED:
@@ -235,7 +235,7 @@ void SCTPNatServer::handleMessage(cMessage *msg)
             }
             case SCTP_I_DATA:
             {
-                sctpEV3 << "\nData arrived at server: assoc=" << assocId <<"\n";
+                EV << "\nData arrived at server: assoc=" << assocId <<"\n";
                 printNatVector();
                 SCTPCommand *ind = check_and_cast<SCTPCommand *>(msg->removeControlInfo());
                 id = ind->getAssocId();
@@ -248,9 +248,9 @@ void SCTPNatServer::handleMessage(cMessage *msg)
                     {
                         if ((*it)->peer1 == nat->getPeer1() || (*it)->peer1Assoc == assocId)
                         {
-                            sctpEV3 << "found entry: info: Peer1 = " << nat->getPeer1() << "  peer1Address1=" << nat->getPeer1Addresses(0) << " peer2=" << nat->getPeer2() << " peer2Address1=" << nat->getPeer2Addresses(0) << "\n";
+                            EV << "found entry: info: Peer1 = " << nat->getPeer1() << "  peer1Address1=" << nat->getPeer1Addresses(0) << " peer2=" << nat->getPeer2() << " peer2Address1=" << nat->getPeer2Addresses(0) << "\n";
                             if (nat->getMulti() && nat->getPeer1AddressesArraySize() > 1 && nat->getPeer2AddressesArraySize() > 1) {
-                                sctpEV3 << " peer1Address2=" << nat->getPeer1Addresses(1)  << " peer2Address2=" << nat->getPeer2Addresses(1) << endl;
+                                EV << " peer1Address2=" << nat->getPeer1Addresses(1)  << " peer2Address2=" << nat->getPeer2Addresses(1) << endl;
                             }
                             if ((*it)->peer1 == 0 && !(*it)->peer1Address2.isUnspecified()) {
                                 (*it)->peer1 = nat->getPeer1();
@@ -269,7 +269,7 @@ void SCTPNatServer::handleMessage(cMessage *msg)
 
                                 if (!(*it)->multi || ((*it)->multi && !(*it)->peer2Address2.isUnspecified() && !(*it)->peer1Address2.isUnspecified()))
                                 {
-                                    sctpEV3 << "entry now: Peer1=" << (*it)->peer1 << " Peer2=" << (*it)->peer2 << " peer1Address1=" << (*it)->peer1Address1 << " peer1Address2=" << (*it)->peer1Address2 << " peer2Address1=" << (*it)->peer2Address1 << " peer2Address2=" << (*it)->peer2Address2 << " peer2Port=" << (*it)->peer2Port << "\n";
+                                    EV << "entry now: Peer1=" << (*it)->peer1 << " Peer2=" << (*it)->peer2 << " peer1Address1=" << (*it)->peer1Address1 << " peer1Address2=" << (*it)->peer1Address2 << " peer2Address1=" << (*it)->peer2Address1 << " peer2Address2=" << (*it)->peer2Address2 << " peer2Port=" << (*it)->peer2Port << "\n";
                                     sendInfo((*it));
                                 }
                             }
@@ -278,9 +278,9 @@ void SCTPNatServer::handleMessage(cMessage *msg)
                         }
                         if ((*it)->peer2 == nat->getPeer1() || (*it)->peer2Assoc == assocId)
                         {
-                            sctpEV3 << "opposite way:  info: Peer1 = " << nat->getPeer1() << "  peer1Address1=" << nat->getPeer1Addresses(0) << " peer2=" << nat->getPeer2() << " peer2Address1=" << nat->getPeer2Addresses(0) << "\n";
+                            EV << "opposite way:  info: Peer1 = " << nat->getPeer1() << "  peer1Address1=" << nat->getPeer1Addresses(0) << " peer2=" << nat->getPeer2() << " peer2Address1=" << nat->getPeer2Addresses(0) << "\n";
                             if (nat->getMulti() && nat->getPeer1AddressesArraySize() > 1 && nat->getPeer2AddressesArraySize() > 1) {
-                                sctpEV3 << " peer1Address2=" << nat->getPeer1Addresses(1)  << " peer2Address2=" << nat->getPeer2Addresses(1) << endl;
+                                EV << " peer1Address2=" << nat->getPeer1Addresses(1)  << " peer2Address2=" << nat->getPeer2Addresses(1) << endl;
                             }
                             if ((*it)->peer2 == 0) {
                                 (*it)->peer2 = nat->getPeer1();
@@ -294,7 +294,7 @@ void SCTPNatServer::handleMessage(cMessage *msg)
                                 (*it)->peer2Assoc = assocId;
                                 (*it)->peer2Port = nat->getPortPeer1();
                                 (*it)->peer2Gate = ind->getGate();
-                                sctpEV3 << "set peer2Address1=" << ind->getRemoteAddr() << " peer2Assoc=" << assocId << " peer2Port=" << nat->getPortPeer1() << "\n";
+                                EV << "set peer2Address1=" << ind->getRemoteAddr() << " peer2Assoc=" << assocId << " peer2Port=" << nat->getPortPeer1() << "\n";
                             }
                             else if ((*it)->multi && !(*it)->peer2Address2.isUnspecified())
                                 (*it)->peer2Address2 = ind->getRemoteAddr();
@@ -302,7 +302,7 @@ void SCTPNatServer::handleMessage(cMessage *msg)
                             if (!(*it)->multi || ((*it)->multi && !(*it)->peer2Address2.isUnspecified() && !(*it)->peer1Address2.isUnspecified()
                                 && !(*it)->peer2Address1.isUnspecified() && !(*it)->peer1Address1.isUnspecified()))
                             {
-                                sctpEV3 << "entry now: Peer1=" << (*it)->peer1 << " Peer2=" << (*it)->peer2 << " peer1Address1=" << (*it)->peer1Address1 << " peer1Address2=" << (*it)->peer1Address2 << " peer2Address1=" << (*it)->peer2Address1 << " peer2Address2=" << (*it)->peer2Address2 << " peer1Port=" << (*it)->peer1Port << "peer2Port=" << (*it)->peer2Port << "\n";
+                                EV << "entry now: Peer1=" << (*it)->peer1 << " Peer2=" << (*it)->peer2 << " peer1Address1=" << (*it)->peer1Address1 << " peer1Address2=" << (*it)->peer1Address2 << " peer2Address1=" << (*it)->peer2Address1 << " peer2Address2=" << (*it)->peer2Address2 << " peer1Port=" << (*it)->peer1Port << "peer2Port=" << (*it)->peer2Port << "\n";
                                 sendInfo((*it));
                             }
                             found = true;
@@ -312,10 +312,10 @@ void SCTPNatServer::handleMessage(cMessage *msg)
                 }
                 if (natVector.size()==0 || !found)
                 {
-                    sctpEV3 << "make new Info for ";
+                    EV << "make new Info for ";
                     NatInfo* info = new NatInfo();
                     info->peer1 = nat->getPeer1();
-                    sctpEV3 << info->peer1 << " and assoc " << assocId << "\n";;
+                    EV << info->peer1 << " and assoc " << assocId << "\n";;
                     info->multi = nat->getMulti();
                     info->peer1Address1 = ind->getRemoteAddr();
                     if (info->multi)
@@ -332,9 +332,9 @@ void SCTPNatServer::handleMessage(cMessage *msg)
                     info->peer2Assoc = 0;
                     info->peer2Gate = -1;
                     natVector.push_back(info);
-                    sctpEV3 << "Info: peer1=" << info->peer1 << " peer1Address1=" << info->peer1Address1 << " peer1Address2=" << info->peer1Address2 << " peer1Assoc=" << info->peer1Assoc << "\n peer2=" << info->peer2 << " peer2Address1=" << info->peer2Address1 << " peer2Address2=" << info->peer2Address2 << " peer2Assoc=" << info->peer2Assoc << "\n";
+                    EV << "Info: peer1=" << info->peer1 << " peer1Address1=" << info->peer1Address1 << " peer1Address2=" << info->peer1Address2 << " peer1Assoc=" << info->peer1Assoc << "\n peer2=" << info->peer2 << " peer2Address1=" << info->peer2Address1 << " peer2Address2=" << info->peer2Address2 << " peer2Assoc=" << info->peer2Assoc << "\n";
                 }
-                sctpEV3 << "\n";
+                EV << "\n";
                 printNatVector();
                 delete msg;
 
@@ -346,7 +346,7 @@ void SCTPNatServer::handleMessage(cMessage *msg)
             {
                 SCTPCommand *command = check_and_cast<SCTPCommand *>(msg->removeControlInfo());
                 id = command->getAssocId();
-                sctpEV3 << "server: SCTP_I_SHUTDOWN_RECEIVED for assoc " << id << "\n";
+                EV << "server: SCTP_I_SHUTDOWN_RECEIVED for assoc " << id << "\n";
                 cPacket* cmsg = new cPacket("Request");
                 SCTPInfo* qinfo = new SCTPInfo("Info");
                 cmsg->setKind(SCTP_C_NO_OUTSTANDING);
@@ -375,25 +375,25 @@ void SCTPNatServer::handleMessage(cMessage *msg)
                 SCTPCommand *ind = check_and_cast<SCTPCommand *>(msg->removeControlInfo());
                 bool found = false;
                 printNatVector();
-                sctpEV3 << " address added: LOCAL=" << ind->getLocalAddr() << ", remote=" << ind->getRemoteAddr() << " assoc=" << assocId << "\n";
+                EV << " address added: LOCAL=" << ind->getLocalAddr() << ", remote=" << ind->getRemoteAddr() << " assoc=" << assocId << "\n";
                 if (natVector.size()>0)
                 {
                     for (NatVector::iterator it=natVector.begin(); it!=natVector.end(); it++)
                     {
                         if ((*it)->peer1Assoc==assocId)
                         {
-                            sctpEV3 << "found entry for assoc1 = " << assocId << "  Peer1 = " << (*it)->peer1 << "  peer1Address1=" << (*it)->peer1Address1 << " peer1Address2=" << (*it)->peer1Address2 << " peer2=" << (*it)->peer2 << " peer2Address1=" << (*it)->peer2Address1 << " peer2Address2=" << (*it)->peer2Address2 << "\n";
+                            EV << "found entry for assoc1 = " << assocId << "  Peer1 = " << (*it)->peer1 << "  peer1Address1=" << (*it)->peer1Address1 << " peer1Address2=" << (*it)->peer1Address2 << " peer2=" << (*it)->peer2 << " peer2Address1=" << (*it)->peer2Address1 << " peer2Address2=" << (*it)->peer2Address2 << "\n";
                             if ((*it)->multi && (*it)->peer1Address2.isUnspecified())
                             {
                                 (*it)->peer1Address2 = ind->getRemoteAddr();
-                                sctpEV3 << "added peer1Address2=" << ind->getRemoteAddr() << "\n";
+                                EV << "added peer1Address2=" << ind->getRemoteAddr() << "\n";
                             }
                             if (!(*it)->peer2Address1.isUnspecified())
                             {
 
                                 if (!(*it)->multi || ((*it)->multi && !(*it)->peer2Address2.isUnspecified() && !(*it)->peer1Address2.isUnspecified()))
                                 {
-                                    sctpEV3 << "entry now: Peer1=" << (*it)->peer1 << " Peer2=" << (*it)->peer2 << " peer1Address1=" << (*it)->peer1Address1 << " peer1Address2=" << (*it)->peer1Address2 << " peer2Address1=" << (*it)->peer2Address1 << " peer2Address2=" << (*it)->peer2Address2 << " peer2Port=" << (*it)->peer2Port << "\n";
+                                    EV << "entry now: Peer1=" << (*it)->peer1 << " Peer2=" << (*it)->peer2 << " peer1Address1=" << (*it)->peer1Address1 << " peer1Address2=" << (*it)->peer1Address2 << " peer2Address1=" << (*it)->peer2Address1 << " peer2Address2=" << (*it)->peer2Address2 << " peer2Port=" << (*it)->peer2Port << "\n";
                                     sendInfo((*it));
                                 }
                             }
@@ -402,13 +402,13 @@ void SCTPNatServer::handleMessage(cMessage *msg)
                         }
                         else if ((*it)->peer2Assoc==assocId)
                         {
-                            sctpEV3 << "opposite way: found entry for assoc2 = " << assocId << "  peer1Address1=" << (*it)->peer1Address1 << " peer1Address2=" << (*it)->peer1Address2 << " peer2Address1=" << (*it)->peer2Address1 << " peer2Address2=" << (*it)->peer2Address2 << "\n";
+                            EV << "opposite way: found entry for assoc2 = " << assocId << "  peer1Address1=" << (*it)->peer1Address1 << " peer1Address2=" << (*it)->peer1Address2 << " peer2Address1=" << (*it)->peer2Address1 << " peer2Address2=" << (*it)->peer2Address2 << "\n";
                             if ((*it)->multi)
                                 (*it)->peer2Address2 = ind->getRemoteAddr();
 
                             if (!(*it)->multi || ((*it)->multi && !(*it)->peer2Address2.isUnspecified() && !(*it)->peer1Address2.isUnspecified()))
                             {
-                                sctpEV3 << "entry now: Peer1=" << (*it)->peer1 << " Peer2=" << (*it)->peer2 << " peer1Address1=" << (*it)->peer1Address1 << " peer1Address2=" << (*it)->peer1Address2 << " peer2Address1=" << (*it)->peer2Address1 << " peer2Address2=" << (*it)->peer2Address2 << " peer1Port=" << (*it)->peer1Port << "peer2Port=" << (*it)->peer2Port << "\n";
+                                EV << "entry now: Peer1=" << (*it)->peer1 << " Peer2=" << (*it)->peer2 << " peer1Address1=" << (*it)->peer1Address1 << " peer1Address2=" << (*it)->peer1Address2 << " peer2Address1=" << (*it)->peer2Address1 << " peer2Address2=" << (*it)->peer2Address2 << " peer1Port=" << (*it)->peer1Port << "peer2Port=" << (*it)->peer2Port << "\n";
                                 sendInfo((*it));
                             }
                             found = true;
@@ -420,17 +420,17 @@ void SCTPNatServer::handleMessage(cMessage *msg)
                             (*it)->peer2Assoc = assocId;
                             (*it)->peer2Port = ind->getRemotePort();
                             (*it)->peer2Gate = ind->getGate();
-                            sctpEV3 << "entry now: Peer1=" << (*it)->peer1 << " Peer2=" << (*it)->peer2 << " peer1Address1=" << (*it)->peer1Address1 << " peer1Address2=" << (*it)->peer1Address2 << " peer2Address1=" << (*it)->peer2Address1 << " peer2Address2=" << (*it)->peer2Address2 << " peer1Port=" << (*it)->peer1Port << "peer2Port=" << (*it)->peer2Port << "\n";
+                            EV << "entry now: Peer1=" << (*it)->peer1 << " Peer2=" << (*it)->peer2 << " peer1Address1=" << (*it)->peer1Address1 << " peer1Address2=" << (*it)->peer1Address2 << " peer2Address1=" << (*it)->peer2Address1 << " peer2Address2=" << (*it)->peer2Address2 << " peer1Port=" << (*it)->peer1Port << "peer2Port=" << (*it)->peer2Port << "\n";
 
                             found = true;
                         }
                     }
                 } else if (natVector.size() == 0 && !found) {
-                    sctpEV3 << "make new Info for ";
+                    EV << "make new Info for ";
                     NatInfo* info = new NatInfo();
                     info->peer1 = 0;
                     info->peer1Assoc = assocId;
-                    sctpEV3 << info->peer1 << " and assoc " << assocId << "\n";;
+                    EV << info->peer1 << " and assoc " << assocId << "\n";;
                     info->multi = 1;
                     info->peer1Address1 = Address();
                     info->peer1Address2 = ind->getRemoteAddr();
@@ -443,14 +443,14 @@ void SCTPNatServer::handleMessage(cMessage *msg)
                     info->peer2Assoc = 0;
                     info->peer2Gate = -1;
                     natVector.push_back(info);
-                    sctpEV3 << "Info: peer1=" << info->peer1 << " peer1Address1=" << info->peer1Address1 << " peer1Address2=" << info->peer1Address2 << " peer1Assoc=" << info->peer1Assoc << "\n peer2=" << info->peer1 << " peer2Address1=" << info->peer2Address1 << " peer2Address2=" << info->peer2Address2 << " peer2Assoc=" << info->peer2Assoc << "\n";
+                    EV << "Info: peer1=" << info->peer1 << " peer1Address1=" << info->peer1Address1 << " peer1Address2=" << info->peer1Address2 << " peer1Assoc=" << info->peer1Assoc << "\n peer2=" << info->peer1 << " peer2Address1=" << info->peer2Address1 << " peer2Address2=" << info->peer2Address2 << " peer2Assoc=" << info->peer2Assoc << "\n";
                 }
                 delete ind;
                 delete msg;
                 printNatVector();
                 break;
             }
-            default: sctpEV3 << "Message type " << SCTPAssociation::indicationName(msg->getKind()) << " not implemented\n";
+            default: EV << "Message type " << SCTPAssociation::indicationName(msg->getKind()) << " not implemented\n";
         }
     }
 }
@@ -493,8 +493,8 @@ void SCTPNatServer::printNatVector(void)
 {
     for (NatVector::iterator it=natVector.begin(); it!=natVector.end(); it++)
     {
-        sctpEV3 << "Peer1: " << (*it)->peer1 << " Assoc: " << (*it)->peer1Assoc << " Address1: " << (*it)->peer1Address1 << " Address2: " << (*it)->peer1Address2 << "Port: " << (*it)->peer1Port << endl;
-        sctpEV3 << "Peer2: " << (*it)->peer2 << " Assoc: " << (*it)->peer2Assoc << " Address1: " << (*it)->peer2Address1 << " Address2: " << (*it)->peer2Address2 << "Port: " << (*it)->peer2Port << endl;
+        EV << "Peer1: " << (*it)->peer1 << " Assoc: " << (*it)->peer1Assoc << " Address1: " << (*it)->peer1Address1 << " Address2: " << (*it)->peer1Address2 << "Port: " << (*it)->peer1Port << endl;
+        EV << "Peer2: " << (*it)->peer2 << " Assoc: " << (*it)->peer2Assoc << " Address1: " << (*it)->peer2Address1 << " Address2: " << (*it)->peer2Address2 << "Port: " << (*it)->peer2Port << endl;
     }
 }
 

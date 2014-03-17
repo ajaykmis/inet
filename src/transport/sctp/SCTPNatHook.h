@@ -4,7 +4,6 @@
 #include "INetfilter.h"
 #include "SCTPNatTable.h"
 #include "INETDefs.h"
-#include "InterfaceTableAccess.h"
 
 class IPv4;
 

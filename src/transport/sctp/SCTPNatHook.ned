@@ -8,6 +8,10 @@ import inet.base.IHook;
 //
 simple SCTPNatHook like IHook
 {
+    parameters:
+        string interfaceTableModule;
+        string networkProtocolModule;
+        string routingTableModule;
     gates:
         input in;
         output out;

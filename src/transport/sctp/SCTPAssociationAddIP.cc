@@ -256,8 +256,6 @@ bool SCTPAssociation::compareRandom()
                     return true;
             }
         }
-    } else {
-        return false;
     }
     else
         size = sizeKeyVector;

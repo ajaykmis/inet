@@ -1309,7 +1309,7 @@ SCTPEventCode SCTPAssociation::processSackArrived(SCTPSackChunk* sackChunk)
                             path->waitingForRTTCalculaton = false;
                             pmRttMeasurement(path, rttEstimation);
 
-                            sctpEV3 << simTime() << ": SlowPathRTTUpdate from gap report - rtt="
+                            EV << simTime() << ": SlowPathRTTUpdate from gap report - rtt="
                                     << rttEstimation << " from TSN "
                                     << path->tsnForRTTCalculation
                                     << " on path " << path->remoteAddress
@@ -1579,7 +1579,7 @@ void SCTPAssociation::handleChunkReportedAsAcked(uint32&                  highes
     SCTPPathVariables* myChunkLastPath = myChunk->getLastDestinationPath();
     // SFR algorithm
     if(state->allowCMT == true) {
-        sctpEV3 << "TSN " << myChunk->tsn << " on path " << myChunkLastPath->remoteAddress << ":\t"
+        EV << "TSN " << myChunk->tsn << " on path " << myChunkLastPath->remoteAddress << ":\t"
                 << "findPseudoCumAck="    << ((myChunkLastPath->findPseudoCumAck == true) ? "true" : "false")    << "\t"
                 << "pseudoCumAck="        << myChunkLastPath->pseudoCumAck    << "\t"
                 << "newPseudoCumAck="     << ((myChunkLastPath->newPseudoCumAck == true) ? "true" : "false")     << "\t"
@@ -1590,7 +1590,7 @@ void SCTPAssociation::handleChunkReportedAsAcked(uint32&                  highes
 
         // This chunk has not been acked before -> new ack on its myChunkLastPath.
         if(myChunkLastPath->sawNewAck == false) {
-            sctpEV3 << "TSN " << myChunk->tsn << " on path " << myChunkLastPath->remoteAddress << ":\t"
+            EV << "TSN " << myChunk->tsn << " on path " << myChunkLastPath->remoteAddress << ":\t"
                     << "Saw new ack -> setting highestNewAckInSack!" << endl;
             myChunkLastPath->sawNewAck           = true;
         }
@@ -1709,7 +1709,7 @@ void SCTPAssociation::handleChunkReportedAsMissing(const SCTPSackChunk* sackChun
                     }
                     if(sawNewAckOnlyOnThisPath == true) {
                         // All newly acked TSNs were sent on the same path
-                        sctpEV3 << "SplitFastRTX + DAC: all on same path:   "
+                        EV << "SplitFastRTX + DAC: all on same path:   "
                                 << "TSN="                  << myChunk->tsn
                                 << " lowestNewAckInSack="  << myChunkLastPath->lowestNewAckInSack
                                 << " highestNewAckInSack=" << myChunkLastPath->highestNewAckInSack
@@ -1721,21 +1721,21 @@ void SCTPAssociation::handleChunkReportedAsMissing(const SCTPSackChunk* sackChun
                         //   -> since all TSNs were on the same path, this value can be used as ta
                         if( tsnLt(myChunkLastPath->lowestNewAckInSack, myChunk->tsn) &&
                             tsnLt(myChunk->tsn, myChunkLastPath->highestNewAckInSack) ) {
-                            sctpEV3 << "   => conservative increment of 1" << endl;
+                            EV << "   => conservative increment of 1" << endl;
                             chunkReportedAsMissing = 1;
                         } else if(tsnGt(myChunkLastPath->lowestNewAckInSack, myChunk->tsn)) {   // All newly acked TSNs are larger than myChunk->tsn
-                           sctpEV3 << "   => reported increment of dacPacketsRcvd=" << (unsigned int)sackChunk->getDacPacketsRcvd() << endl;
+                           EV << "   => reported increment of dacPacketsRcvd=" << (unsigned int)sackChunk->getDacPacketsRcvd() << endl;
                            chunkReportedAsMissing = sackChunk->getDacPacketsRcvd();
                         }
                     } else {
                         // Mixed SACKS: newly acked TSNs were sent to multiple paths
-                        sctpEV3 << "SplitFastRTX + DAC: mixed acks, increment is 1" << endl;
+                        EV << "SplitFastRTX + DAC: mixed acks, increment is 1" << endl;
                         chunkReportedAsMissing = 1;
                     }
                 }
             } // else: There is no need to increment the missing count.
 
-            sctpEV3 << "SplitFastRTX: chunkReportedAsMissing="
+            EV << "SplitFastRTX: chunkReportedAsMissing="
                     << chunkReportedAsMissing << ", "
                     << "sawNewAck="           << myChunkLastPath->sawNewAck           << ", "
                     << "lowestNewAckInSack="  << myChunkLastPath->lowestNewAckInSack
@@ -1772,7 +1772,7 @@ void SCTPAssociation::handleChunkReportedAsMissing(const SCTPSackChunk* sackChun
                 }
                 if (fastRtx) {
                     if(myChunk->hasBeenMoved) {
-                        sctpEV3 << simTime() << ": MovedFastRTX for TSN " << myChunk->tsn << endl;
+                        EV << simTime() << ": MovedFastRTX for TSN " << myChunk->tsn << endl;
                     }
                     myChunk->hasBeenMoved = false;   // Just trigger *one* fast RTX ...
                     // ====== Add chunk to transmission queue ========

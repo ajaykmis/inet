@@ -28,6 +28,7 @@ import inet.nodes.inet.StandardHost;
 module SCTPNatRouter extends StandardHost {
     parameters:
         IPForward = true;
+        natHook.networkProtocolModule = default(absPath(".networkLayer.ip"));
     submodules:
         natHook: SCTPNatHook {
         parameters:

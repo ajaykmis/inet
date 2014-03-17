@@ -134,7 +134,7 @@ void SCTPNatTable::printNatTable()
 {
     for (SCTPNatEntryTable::iterator i=natEntries.begin(); i!=natEntries.end(); ++i)
     {
-        sctpEV3 << "localAddr:" << (*i)->getLocalAddress() << "  globalAddr:" << (*i)->getGlobalAddress() << "  localPort:" << (*i)->getLocalPort() << "  globalPort:" << (*i)->getGlobalPort() << "  nattedAddr:" << (*i)->getNattedAddress() << "  nattedPort:" << (*i)->getNattedPort() << "  localVtag:" << (*i)->getLocalVTag() << "  globalVtag:" << (*i)->getGlobalVTag() << "\n";
+        EV << "localAddr:" << (*i)->getLocalAddress() << "  globalAddr:" << (*i)->getGlobalAddress() << "  localPort:" << (*i)->getLocalPort() << "  globalPort:" << (*i)->getGlobalPort() << "  nattedAddr:" << (*i)->getNattedAddress() << "  nattedPort:" << (*i)->getNattedPort() << "  localVtag:" << (*i)->getLocalVTag() << "  globalVtag:" << (*i)->getGlobalVTag() << "\n";
     }
 }
 

@@ -15,8 +15,6 @@
 
 #include "L2NodeConfigurator.h"
 #include "ModuleAccess.h"
-#include "InterfaceTableAccess.h"
-//#include "RoutingTableAccess.h"
 #include "NodeStatus.h"
 #include "NodeOperations.h"
 
@@ -33,18 +31,9 @@ void L2NodeConfigurator::initialize(int stage)
 {
     if (stage == INITSTAGE_LOCAL)
     {
-        const char * networkConfiguratorPath = par("l2ConfiguratorModule");
         nodeStatus = dynamic_cast<NodeStatus *>(findContainingNode(this)->getSubmodule("status"));
-        interfaceTable = InterfaceTableAccess().get();
-
-        if (!networkConfiguratorPath[0])
-            networkConfigurator = NULL;
-        else {
-            cModule * module = getModuleByPath(networkConfiguratorPath);
-            if (!module)
-                throw cRuntimeError("Configurator module '%s' not found (check the 'l2ConfiguratorModule' parameter)", networkConfiguratorPath);
-            networkConfigurator = check_and_cast<L2NetworkConfigurator *>(module);
-        }
+        interfaceTable = getModuleFromPar<IInterfaceTable>(par("interfaceTableModule"), this);
+        networkConfigurator = findModuleFromPar<L2NetworkConfigurator>(par("l2ConfiguratorModule"), this);
     }
     else if (stage == INITSTAGE_LINK_LAYER_2)
     {
